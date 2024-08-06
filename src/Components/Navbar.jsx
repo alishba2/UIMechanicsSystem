@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import './Navbar.css';
 import img2 from "../images/bike.jpg";
 import { Link } from 'react-router-dom';
 import { FaSearch } from "react-icons/fa";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
+import { AuthContext } from './Context/appContext';
+
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, isLoggedIn } = AuthContext;
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -23,15 +26,18 @@ const Navbar = () => {
         <input type='text' placeholder='Search' />
         &nbsp;  &nbsp;  &nbsp;
 
-        <div className="button-container">
+        {isLoggedIn ? (
+
+          <p>{user?.name}</p>
+        ) : (<div className="button-container">
           <Link to="/login">
             <button className='semi-round-btn'>Login</button>
           </Link>
-          &nbsp;  &nbsp;  &nbsp;  &nbsp;  
+          &nbsp;  &nbsp;  &nbsp;  &nbsp;
           <Link to="/Register">
             <button className='semi-round-btn'>Signup</button>
           </Link>
-        </div>
+        </div>)}
       </div>
       <button onClick={toggleMenu} className='toggle-icon'>
         <FontAwesomeIcon icon={faBars} />

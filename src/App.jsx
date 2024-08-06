@@ -26,7 +26,7 @@ function App() {
     <>
       {" "}
       <AuthProvider>
-        <BrowserRouter>
+        <BrowserRouter>a
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />

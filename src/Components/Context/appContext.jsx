@@ -5,11 +5,27 @@ const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [id, setId] = useState(null);
+
+  useEffect(() => {
+    let user = localStorage.getItem("userId")
+    if (user) {
+      setIsLoggedIn(true);
+    }
+    setId(user);
+
+
+  }, [localStorage])
+
+
 
   const login = (userData) => {
     setUser(userData);
-    localStorage.setItem("userId", userData._id);
+    localStorage.setItem("role", userData.role);
+    localStorage.setItem("userId", userData?.id);
     console.log("data-----", userData);
+    setIsLoggedIn(true);
   };
 
   const logout = () => {
@@ -23,7 +39,8 @@ const AuthProvider = ({ children }) => {
       const userId = localStorage.getItem("userId");
       if (userId) {
         try {
-          const response = await getUserById(userId);
+          const response = await getUserById(id);
+          console.log(response, "reponse of logged ind ata");
           setUser(response.data.user); // Adjust to match the response format
         } catch (error) {
           console.error("Failed to fetch user:", error);
@@ -32,10 +49,10 @@ const AuthProvider = ({ children }) => {
     };
 
     fetchUser();
-  }, []);
+  }, [localStorage, id]);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoggedIn }}>
       {children}
     </AuthContext.Provider>
   );

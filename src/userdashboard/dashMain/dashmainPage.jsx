@@ -15,17 +15,15 @@ const DashmainPage = () => {
           <img src={img2} alt="Logo" className="logo" />
           <div className="d-flex flex-column gap-2">
             <h5
-              className={`mt-5 ${
-                activeComponent === "EditProfile" ? "active" : ""
-              }`}
+              className={`mt-5 ${activeComponent === "EditProfile" ? "active" : ""
+                }`}
               onClick={() => setActiveComponent("EditProfile")}
             >
               Edit Profile
             </h5>
             <h5
-              className={`${
-                activeComponent === "SetAppointment" ? "active" : ""
-              }`}
+              className={`${activeComponent === "SetAppointment" ? "active" : ""
+                }`}
               onClick={() => setActiveComponent("SetAppointment")}
             >
               Set Appointment

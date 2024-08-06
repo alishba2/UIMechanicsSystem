@@ -1,52 +1,103 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useFormik } from "formik";
-import { createUpdateProfile, getUserById } from "../../Api/api";
+import axios from "axios";
 import "./viewProfile.scss";
 import dp from "../../Components/assets/dp1.png";
 import camera from "../../Components/assets/camera.png";
 import { notifyError, notifySuccess } from "../../utils/helpers";
 import { AuthContext } from "../../Components/Context/appContext";
 
+const skillsOptions = [
+  "Plumbing",
+  "Electrical",
+  "Carpentry",
+  "Painting",
+  "HVAC",
+  "Gardening",
+  "Other"
+];
+
+const timeSlotsOptions = [
+  "9 AM - 12 PM",
+  "12 PM - 3 PM",
+  "3 PM - 6 PM",
+  "6 PM - 9 PM",
+  "Available All Day"
+];
+
 const ViewProfile = () => {
   const { user, login } = useContext(AuthContext);
   const [dpImage, setDpImage] = useState(dp);
-  useEffect(() => {
-    if (user && user.id) {
-      console.log(`User ID: ${user.id}`);
-    }
-  }, [user]);
-  useEffect(() => {
-    if (user && user.profileImage) {
-      setDpImage(user.profileImage);
-    }
-  }, [user]);
-  const formik = useFormik({
-    initialValues: {
-      username: user?.username || "",
-      email: user?.email || "",
-      password: "",
-      contactNo: user?.contactNo || "",
-      address: user?.address || "",
-    },
-    onSubmit: async (values) => {
-      try {
-        const userId = user.id;
-        const profileData = { ...values };
-        const response = await createUpdateProfile(userId, profileData);
-        login(response.data); // Update user data in context
-        notifySuccess("Profile updated successfully", 1000);
-      } catch (error) {
-        notifyError(error.response.data.message, 1000);
-      }
-    },
-    enableReinitialize: true,
+  const [formValues, setFormValues] = useState({
+    username: "",
+    email: "",
+    contactNo: "",
+    address: "",
+    skills: [],
+    availableTimeSlots: [],
+    hourlyRating: "",
+    yrsOfExperience: "",
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormValues({
+        username: user.username || "",
+        email: user.email || "",
+
+        contactNo: user.contactNo || "",
+        address: user.address || "",
+        skills: user.skills || [],  // Set skills as an array
+        availableTimeSlots: user.availableTimeSlots || [], // Set available time slots as an array
+        hourlyRating: user.hourlyRating || "",
+        yrsOfExperience: user.yrsOfExperience || "",
+      });
+      setDpImage(user.profileImage || dp);
+    }
+  }, [user]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      [name]: value,
+    }));
+  };
+
+  const handleCheckboxChange = (e) => {
+    const { name, value, checked } = e.target;
+    setFormValues((prevValues) => {
+      const updatedValues = { ...prevValues };
+      if (name === "skills") {
+        updatedValues.skills = checked
+          ? [...prevValues.skills, value]
+          : prevValues.skills.filter(skill => skill !== value);
+      }
+      if (name === "availableTimeSlots") {
+        updatedValues.availableTimeSlots = checked
+          ? [...prevValues.availableTimeSlots, value]
+          : prevValues.availableTimeSlots.filter(slot => slot !== value);
+      }
+      return updatedValues;
+    });
+  };
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
       setDpImage(imageUrl);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const userId = user._id;
+      const response = await axios.put('http://localhost:3001/profile', { userId, ...formValues });
+      login(response.data.user); // Update user data in context
+      notifySuccess("Profile updated successfully", 1000);
+    } catch (error) {
+      notifyError(error.response?.data?.message || "An error occurred", 1000);
     }
   };
 
@@ -71,47 +122,111 @@ const ViewProfile = () => {
             onChange={handleImageUpload}
           />
         </div>
-        <div className="right d-flex flex-column ">
+        <div className="right d-flex flex-column">
           <h5 className="fw-bold">{user.username}</h5>
           <p>{user.email}</p>
         </div>
       </div>
-      <form onSubmit={formik.handleSubmit} className="bottom mt-5">
+      <form onSubmit={handleSubmit} className="bottom mt-5">
         <div className="d-flex gap-2 bottom-inner">
           <input
             type="text"
+            name="username"
             placeholder="UserName"
             className="user-input"
-            {...formik.getFieldProps("username")}
+            value={formValues.username}
+            onChange={handleInputChange}
           />
           <input
             type="email"
+            name="email"
             placeholder="Email"
             className="user-input"
-            {...formik.getFieldProps("email")}
+            value={formValues.email}
+            onChange={handleInputChange}
           />
         </div>
         <div className="d-flex gap-2 bottom-inner">
-          <input
+          {/* <input
             type="password"
+            name="password"
             placeholder="Update Password"
             className="user-input"
-            {...formik.getFieldProps("password")}
-          />
+            value={formValues.password}
+            onChange={handleInputChange}
+          /> */}
           <input
             type="text"
+            name="contactNo"
             placeholder="Phone Number"
             className="user-input"
-            {...formik.getFieldProps("contactNo")}
+            value={formValues.contactNo}
+            onChange={handleInputChange}
           />
         </div>
         <div className="d-flex gap-2 bottom-inner mt-2">
           <textarea
+            name="address"
             placeholder="Address"
             className="user-input"
-            {...formik.getFieldProps("address")}
+            value={formValues.address}
+            onChange={handleInputChange}
           ></textarea>
         </div>
+        {user.role === 'mechanic' && (
+          <>
+            <div className="d-flex gap-2 bottom-inner mt-2">
+              <fieldset>
+                <legend>Select Skills</legend>
+                {skillsOptions.map(skill => (
+                  <div key={skill}>
+                    <input
+                      type="checkbox"
+                      name="skills"
+                      value={skill}
+                      checked={formValues.skills.includes(skill)}
+                      onChange={handleCheckboxChange}
+                    />
+                    <label>{skill}</label>
+                  </div>
+                ))}
+              </fieldset>
+              <fieldset>
+                <legend>Select Available Time Slots</legend>
+                {timeSlotsOptions.map(slot => (
+                  <div key={slot}>
+                    <input
+                      type="checkbox"
+                      name="availableTimeSlots"
+                      value={slot}
+                      checked={formValues.availableTimeSlots.includes(slot)}
+                      onChange={handleCheckboxChange}
+                    />
+                    <label>{slot}</label>
+                  </div>
+                ))}
+              </fieldset>
+            </div>
+            <div className="d-flex gap-2 bottom-inner mt-2">
+              <input
+                type="number"
+                name="hourlyRating"
+                placeholder="Hourly Rating"
+                className="user-input"
+                value={formValues.hourlyRating}
+                onChange={handleInputChange}
+              />
+              <input
+                type="number"
+                name="yrsOfExperience"
+                placeholder="Years of Experience"
+                className="user-input"
+                value={formValues.yrsOfExperience}
+                onChange={handleInputChange}
+              />
+            </div>
+          </>
+        )}
         <button type="submit" className="mt-3">
           Save
         </button>
