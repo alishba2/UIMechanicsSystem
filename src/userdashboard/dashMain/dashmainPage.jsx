@@ -1,0 +1,45 @@
+import React, { useState } from "react";
+import "./dashmain.scss";
+import img2 from "../../images/bike.jpg";
+import EditProfile from "../viewProfile/viewProfile";
+import SetAppointment from "../Appointment/appointment";
+import { useNavigate } from "react-router-dom";
+
+const DashmainPage = () => {
+  const navigate = useNavigate();
+  const [activeComponent, setActiveComponent] = useState("EditProfile");
+  return (
+    <>
+      <div className="dashboard-user-main d-flex">
+        <div className="left-div d-flex flex-column">
+          <img src={img2} alt="Logo" className="logo" />
+          <div className="d-flex flex-column gap-2">
+            <h5
+              className={`mt-5 ${
+                activeComponent === "EditProfile" ? "active" : ""
+              }`}
+              onClick={() => setActiveComponent("EditProfile")}
+            >
+              Edit Profile
+            </h5>
+            <h5
+              className={`${
+                activeComponent === "SetAppointment" ? "active" : ""
+              }`}
+              onClick={() => setActiveComponent("SetAppointment")}
+            >
+              Set Appointment
+            </h5>
+            <h5 onClick={() => navigate("/")}>Logout</h5>
+          </div>
+        </div>
+        <div className="right-div">
+          {activeComponent === "EditProfile" && <EditProfile />}
+          {activeComponent === "SetAppointment" && <SetAppointment />}
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default DashmainPage;
