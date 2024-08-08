@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import './Navbar.css';
 import img2 from "../images/bike.jpg";
 import { Link } from 'react-router-dom';
@@ -7,13 +7,27 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
 import { AuthContext } from './Context/appContext';
 
-
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, isLoggedIn } = AuthContext;
+  const [showDropdown, setShowDropdown] = useState(false);
+  const { user, isLoggedIn, logout } = useContext(AuthContext);
+
+  useEffect(() => {
+    console.log(user, "user data");
+    console.log(isLoggedIn, "is logged in");
+  }, [user, isLoggedIn]);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
+  };
+
+  const toggleDropdown = () => {
+    setShowDropdown(!showDropdown);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setShowDropdown(false);
   };
 
   return (
@@ -27,17 +41,36 @@ const Navbar = () => {
         &nbsp;  &nbsp;  &nbsp;
 
         {isLoggedIn ? (
-
-          <p>{user?.name}</p>
-        ) : (<div className="button-container">
-          <Link to="/login">
-            <button className='semi-round-btn'>Login</button>
-          </Link>
-          &nbsp;  &nbsp;  &nbsp;  &nbsp;
-          <Link to="/Register">
-            <button className='semi-round-btn'>Signup</button>
-          </Link>
-        </div>)}
+          <div className="user-menu">
+            <p onClick={toggleDropdown} style={{ color: "black" }} className='username'>
+              {user?.username} {/* Displaying user.username */}
+            </p>
+            {showDropdown && (
+              <div className="dropdown">
+                {/* Pass the user object as state */}
+                <Link
+                  to={{
+                    pathname: "/dashboard-user",
+                    state: { user }, // Sending user data in state
+                  }}
+                >
+                  {user?.role} Dashboard
+                </Link>
+                <button onClick={handleLogout}>Logout</button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="button-container">
+            <Link to="/login">
+              <button className='semi-round-btn'>Login</button>
+            </Link>
+            &nbsp;  &nbsp;  &nbsp;  &nbsp;
+            <Link to="/Register">
+              <button className='semi-round-btn'>Signup</button>
+            </Link>
+          </div>
+        )}
       </div>
       <button onClick={toggleMenu} className='toggle-icon'>
         <FontAwesomeIcon icon={faBars} />

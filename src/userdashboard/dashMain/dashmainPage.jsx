@@ -3,11 +3,15 @@ import "./dashmain.scss";
 import img2 from "../../images/bike.jpg";
 import EditProfile from "../viewProfile/viewProfile";
 import SetAppointment from "../Appointment/appointment";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const DashmainPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = location.state || {}; // Accessing user data from state
+
   const [activeComponent, setActiveComponent] = useState("EditProfile");
+
   return (
     <>
       <div className="dashboard-user-main d-flex">
@@ -15,25 +19,23 @@ const DashmainPage = () => {
           <img src={img2} alt="Logo" className="logo" />
           <div className="d-flex flex-column gap-2">
             <h5
-              className={`mt-5 ${activeComponent === "EditProfile" ? "active" : ""
-                }`}
+              className={`mt-5 ${activeComponent === "EditProfile" ? "active" : ""}`}
               onClick={() => setActiveComponent("EditProfile")}
             >
               Edit Profile
             </h5>
             <h5
-              className={`${activeComponent === "SetAppointment" ? "active" : ""
-                }`}
+              className={`${activeComponent === "SetAppointment" ? "active" : ""}`}
               onClick={() => setActiveComponent("SetAppointment")}
             >
-              Set Appointment
+              View Appointment
             </h5>
             <h5 onClick={() => navigate("/")}>Logout</h5>
           </div>
         </div>
         <div className="right-div">
-          {activeComponent === "EditProfile" && <EditProfile />}
-          {activeComponent === "SetAppointment" && <SetAppointment />}
+          {activeComponent === "EditProfile" && <EditProfile user={user} />}
+          {activeComponent === "SetAppointment" && <SetAppointment user={user} />}
         </div>
       </div>
     </>

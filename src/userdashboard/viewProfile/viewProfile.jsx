@@ -25,8 +25,8 @@ const timeSlotsOptions = [
 ];
 
 const ViewProfile = () => {
-  const { user, login } = useContext(AuthContext);
-  const [dpImage, setDpImage] = useState(dp);
+  const { user } = useContext(AuthContext);
+  const [dpImage, setDpImage] = useState(null); // Change this to store the file instead of the URL
   const [formValues, setFormValues] = useState({
     username: "",
     email: "",
@@ -43,15 +43,14 @@ const ViewProfile = () => {
       setFormValues({
         username: user.username || "",
         email: user.email || "",
-
         contactNo: user.contactNo || "",
         address: user.address || "",
-        skills: user.skills || [],  // Set skills as an array
-        availableTimeSlots: user.availableTimeSlots || [], // Set available time slots as an array
+        skills: user.skills || [],
+        availableTimeSlots: user.availableTimeSlots || [],
         hourlyRating: user.hourlyRating || "",
         yrsOfExperience: user.yrsOfExperience || "",
       });
-      setDpImage(user.profileImage || dp);
+      setDpImage(user.profileImage ? user.profileImage : dp);
     }
   }, [user]);
 
@@ -70,12 +69,12 @@ const ViewProfile = () => {
       if (name === "skills") {
         updatedValues.skills = checked
           ? [...prevValues.skills, value]
-          : prevValues.skills.filter(skill => skill !== value);
+          : prevValues.skills.filter((skill) => skill !== value);
       }
       if (name === "availableTimeSlots") {
         updatedValues.availableTimeSlots = checked
           ? [...prevValues.availableTimeSlots, value]
-          : prevValues.availableTimeSlots.filter(slot => slot !== value);
+          : prevValues.availableTimeSlots.filter((slot) => slot !== value);
       }
       return updatedValues;
     });
@@ -84,8 +83,7 @@ const ViewProfile = () => {
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setDpImage(imageUrl);
+      setDpImage(file); // Save the file in state
     }
   };
 
@@ -93,8 +91,38 @@ const ViewProfile = () => {
     e.preventDefault();
     try {
       const userId = user._id;
-      const response = await axios.put('http://localhost:3001/profile', { userId, ...formValues });
-      login(response.data.user); // Update user data in context
+      const formData = new FormData();
+
+      // Append all form values to formData
+      formData.append("userId", userId);
+      formData.append("username", formValues.username);
+      formData.append("email", formValues.email);
+      formData.append("contactNo", formValues.contactNo);
+      formData.append("address", formValues.address);
+      formData.append("skills", JSON.stringify(formValues.skills)); // Convert array to string
+      formData.append(
+        "availableTimeSlots",
+        JSON.stringify(formValues.availableTimeSlots)
+      ); // Convert array to string
+      formData.append("hourlyRating", formValues.hourlyRating);
+      formData.append("yrsOfExperience", formValues.yrsOfExperience);
+
+      // Append the profile image if it has been changed
+      if (dpImage && dpImage !== user.profileImage) {
+        formData.append("profileImage", dpImage);
+      }
+
+      // Send formData via axios
+      const response = await axios.put(
+        "http://localhost:3001/profile",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
       notifySuccess("Profile updated successfully", 1000);
     } catch (error) {
       notifyError(error.response?.data?.message || "An error occurred", 1000);
@@ -110,7 +138,17 @@ const ViewProfile = () => {
       <h4 className="text-center">Edit Profile</h4>
       <div className="user-id-conatainer d-flex">
         <div className="left">
-          <img src={dpImage} alt="Profile" className="dp" />
+          {dpImage ? (<img
+            src={dpImage instanceof File ? URL.createObjectURL(dpImage) : `http://localhost:3001/${dpImage}`}
+            alt="Profile"
+            className="dp"
+          />) : (
+            <img
+              src={dp}
+              alt="Profile"
+              className="dp"
+            />
+          )}
           <label htmlFor="file-upload" className="camera-icon cursor-pointer">
             <img src={camera} alt="Upload" />
           </label>
@@ -147,14 +185,6 @@ const ViewProfile = () => {
           />
         </div>
         <div className="d-flex gap-2 bottom-inner">
-          {/* <input
-            type="password"
-            name="password"
-            placeholder="Update Password"
-            className="user-input"
-            value={formValues.password}
-            onChange={handleInputChange}
-          /> */}
           <input
             type="text"
             name="contactNo"
@@ -173,12 +203,12 @@ const ViewProfile = () => {
             onChange={handleInputChange}
           ></textarea>
         </div>
-        {user.role === 'mechanic' && (
+        {user.role === "mechanic" && (
           <>
             <div className="d-flex gap-2 bottom-inner mt-2">
               <fieldset>
                 <legend>Select Skills</legend>
-                {skillsOptions.map(skill => (
+                {skillsOptions.map((skill) => (
                   <div key={skill}>
                     <input
                       type="checkbox"
@@ -193,7 +223,7 @@ const ViewProfile = () => {
               </fieldset>
               <fieldset>
                 <legend>Select Available Time Slots</legend>
-                {timeSlotsOptions.map(slot => (
+                {timeSlotsOptions.map((slot) => (
                   <div key={slot}>
                     <input
                       type="checkbox"

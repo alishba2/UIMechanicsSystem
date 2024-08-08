@@ -27,12 +27,9 @@ export default function Login() {
         .then((res) => {
           const token = res.data.token;
           localStorage.setItem("token", token);
-
           console.log("userd data", res.data.user);
-
-
           localStorage.setItem("user", res.data.user);
-          login(res.data.user);
+
           localStorage.setItem("role", res.data.user.role);
           localStorage.setItem("userId", res.data.user?.id);
           notifySuccess("login Successfully", 1000);
